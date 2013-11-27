@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="//cdnjs.cloudflare.com/ajax/libs/paper.js/0.9.9/paper.js"></script> 
+ 
+<script type="text/paperscript" canvas="myCanvas">
+
+	var path = new Path({
+		strokeColor: 'grey'
+	});
+
+	Array.prototype.randomElement = function () {
+    	return this[Math.floor(Math.random() * this.length)]
+	}
+
+	var bugs = []
+
+	var posOrNeg = [[-0.6,0],[0.6,0],[0, -0.6],[0,0.6]]
+	
+	for (var i=0; i < 100; i++ ){
+
+		var point = new Point.random() * (view.viewSize - 100)
+
+		var ladybugInstance = new Path.Circle(point, 5);
+
+		ladybugInstance.fillColor = 'black'
+		
+		ladybugInstance.UpOrDown = posOrNeg.randomElement()
+		
+		//check for intersection on create
+		for (var j = 0; j < bugs.length; j++) {
+			if ( ladybugInstance.bounds.intersects( bugs[j].bounds) ) {
+				ladybugInstance.position = new Point.random() * (view.viewSize - 100)
+			}
+		}
+		
+		ladybugInstance.action = function(){this.translate(this.UpOrDown)};
+
+		bugs.push(ladybugInstance)
+    }
+
+	onMouseMove = function(event){
+		var e = event
+
+		for (var i = 0; i < bugs.length; i++) {
+			var bug = bugs[i]
+			var distanceFromMouse = bug.position.getDistance( e.point )
+
+			if ( distanceFromMouse < 50  ) {
+				
+				bug.action = function(){
+					this.fillColor = 'red'; 
+					this.rotate(Math.min(50, distanceFromMouse/500),e.point)
+					var by = this.position.y
+					var my = e.point.y
+					var deltay = my - by
+					this.translate([
+						(e.point.x - this.position.x)/50, 
+						(e.point.y - this.position.y)/50
+						])
+					
+				};
+				path.add(bug.position);
+			}
+		}
+
+	}
+
+
+	onFrame = function(event) {
+
+		for (var i = 0; i < bugs.length; i++) {
+			var bug = bugs[i]
+			
+			if( !view.bounds.contains(bug.bounds) ){
+				
+				bug.action =function(){
+					this.translate( [-this.UpOrDown[0], -this.UpOrDown[1]] )
+					this.fillColor = 'black'; 
+				}
+			}
+			for (var j = 0; j < bugs.length; j++) {
+				var otherBug = bugs[j]
+				if (bug !== otherBug){
+				}
+			}
+			bug.action()
+		}
+	}
+	
+</script>
+</head>
+<body>
+	<canvas id="myCanvas" style="width:100%;height:100%;position:absolute;"></canvas>
+<div>
+</div> 
+</body>
+</html>
